@@ -1,0 +1,83 @@
+name: Check for updates
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-antigravity
+  cancel-in-progress: false
+
+jobs:
+  antigravity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: main
+          token: ${{ secrets.SPEC_UPDATE_TOKEN || github.token }}
+
+      - name: Test updater
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Check official Linux build
+        id: update
+        run: python3 scripts/update_antigravity.py
+
+      - name: Open or update pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.SPEC_UPDATE_TOKEN || github.token }}
+          branch: automation/update-antigravity
+          base: main
+          delete-branch: true
+          add-paths: |
+            com.google.Antigravity.yml
+            com.google.Antigravity.metainfo.xml
+          commit-message: 'chore(deps): update Antigravity to ${{ steps.update.outputs.version }}'
+          title: 'chore(deps): update Antigravity to ${{ steps.update.outputs.version }}'
+          body: |
+            Update the official Linux build from `${{ steps.update.outputs.previous_version }}` to `${{ steps.update.outputs.version }}`.
+
+            URL: ${{ steps.update.outputs.url }}
+            SHA-256: `${{ steps.update.outputs.sha256 }}`
+            Size: ${{ steps.update.outputs.size }} bytes
+
+            The version comes from the feed the app's own updater reads. The updater checks that the download is a gzip tarball containing the Electron app and language server, and computes its checksum and size.
+
+            A Flatpak build and launch test are still required before merging.
+
+  # Bundled modules with x-checker-data (git). flatpak-external-data-checker
+  # opens its own pull request for each update.
+  modules:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check bundled modules
+        uses: docker://ghcr.io/flathub/flatpak-external-data-checker:latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.SPEC_UPDATE_TOKEN || github.token }}
+          GIT_AUTHOR_NAME: flatpak-external-data-checker
+          GIT_COMMITTER_NAME: flatpak-external-data-checker
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        with:
+          args: --update --never-fork com.google.Antigravity.yml

@@ -1,0 +1,82 @@
+app-id: com.google.Antigravity
+branch: stable
+base: org.electronjs.Electron2.BaseApp
+base-version: '26.08'
+runtime: org.freedesktop.Platform
+runtime-version: '26.08'
+sdk: org.freedesktop.Sdk
+command: antigravity
+separate-locales: false
+
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=dri
+  # Agents read and write projects anywhere in the home directory, and the app
+  # keeps its agent data in ~/.gemini.
+  - --filesystem=home
+  # Lets users reach host tools through `flatpak-spawn --host`. This is a full
+  # sandbox escape; agents already run arbitrary commands in the user's projects.
+  - --talk-name=org.freedesktop.Flatpak
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
+  - --env=ELECTRON_TRASH=gio
+
+modules:
+  # The runtime has no git, and the language server needs it for diffs and worktrees.
+  - name: git
+    buildsystem: simple
+    build-commands:
+      - ./configure --prefix=${FLATPAK_DEST}
+      - make -j ${FLATPAK_BUILDER_N_JOBS} ${GIT_MAKE_ARGS}
+      - make ${GIT_MAKE_ARGS} install
+    build-options:
+      env:
+        # The Rust code in git is optional and would need the Rust SDK extension.
+        GIT_MAKE_ARGS: INSTALL_SYMLINKS=1 NO_PERL=1 NO_PYTHON=1 NO_RUST=1 NO_TCLTK=1
+    cleanup:
+      - /share/gitweb
+    sources:
+      - type: archive
+        url: https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.56.1.tar.xz
+        sha256: f0b0bf89264b9bd2e1c640363e7529643989da76281600473c50745cd34a607f
+        x-checker-data:
+          type: anitya
+          project-id: 5350
+          stable-only: true
+          url-template: https://mirrors.edge.kernel.org/pub/software/scm/git/git-$version.tar.xz
+
+  - name: antigravity
+    buildsystem: simple
+    build-commands:
+      - test "${FLATPAK_ARCH}" = x86_64
+      - install -Dm755 apply_extra.sh /app/bin/apply_extra
+      - install -Dm755 antigravity.sh /app/bin/antigravity
+      - install -Dm644 ${FLATPAK_ID}.desktop /app/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm644 ${FLATPAK_ID}.metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
+      - install -Dm644 ${FLATPAK_ID}.png /app/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png
+    sources:
+      - type: extra-data
+        filename: antigravity.tar.gz
+        only-arches:
+          - x86_64
+        # Versioned build URL, resolved by scripts/update_antigravity.py from the
+        # feed the app's own updater reads.
+        url: https://storage.googleapis.com/antigravity-public/antigravity-hub/2.34.0-5887025308631040/linux-x64/Antigravity.tar.gz
+        sha256: 478c68f86c9ef61a502185a39e9ceec66b1276a6a53b191a19b0d9ce869836db
+        size: 211201084
+      - type: file
+        path: apply_extra.sh
+      - type: file
+        path: antigravity.sh
+      - type: file
+        path: com.google.Antigravity.desktop
+      - type: file
+        path: com.google.Antigravity.metainfo.xml
+      - type: file
+        path: icons/com.google.Antigravity.png

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Antigravity
+Comment=Run and supervise AI coding agents
+Exec=antigravity %U
+Icon=com.google.Antigravity
+Terminal=false
+Type=Application
+Categories=Development;IDE;
+StartupWMClass=com.google.Antigravity
+MimeType=x-scheme-handler/antigravity;

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.google.Antigravity</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <name>Antigravity</name>
+  <summary>Run and supervise AI coding agents</summary>
+  <developer id="com.google">
+    <name>Google LLC</name>
+  </developer>
+  <description>
+    <p>
+      Antigravity is Google's desktop app for agentic development. Agents plan
+      and carry out tasks in your projects, edit files, run commands and use a
+      browser, and the app shows their progress and the changes they make.
+      Projects on remote machines can be opened over SSH.
+    </p>
+    <p>
+      This community-maintained Flatpak downloads the official Linux build from
+      Google during installation. It is not affiliated with or endorsed by Google.
+    </p>
+  </description>
+  <launchable type="desktop-id">com.google.Antigravity.desktop</launchable>
+  <provides>
+    <binary>antigravity</binary>
+  </provides>
+  <url type="homepage">https://antigravity.google</url>
+  <url type="bugtracker">https://github.com/KernelFreeze/antigravity-app-flatpak/issues</url>
+  <url type="vcs-browser">https://github.com/KernelFreeze/antigravity-app-flatpak</url>
+  <categories>
+    <category>Development</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="2.34.0" date="2026-11-21">
+      <url>https://antigravity.google</url>
+      <description>
+        <p>Initial Flatpak packaging of the official Linux build.</p>
+      </description>
+    </release>
+  </releases>
+</component>

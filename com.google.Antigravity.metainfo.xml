@@ -32,6 +32,12 @@
   </categories>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="2.36.0" date="2026-11-28">
+      <url>https://antigravity.google</url>
+      <description>
+        <p>Update the official Linux build.</p>
+      </description>
+    </release>
     <release version="2.34.0" date="2026-11-21">
       <url>https://antigravity.google</url>
       <description>
